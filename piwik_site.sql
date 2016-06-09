@@ -41,13 +41,13 @@ CREATE TABLE `piwik_site` (
   `type` varchar(255) NOT NULL,
   `keep_url_fragment` tinyint(4) NOT NULL DEFAULT '0',
   PRIMARY KEY (`idsite`)
-) ENGINE=InnoDB AUTO_INCREMENT=51 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 
 
 LOCK TABLES `piwik_site` WRITE;
-INSERT INTO `piwik_site` VALUES (1,'default','http://default.com','2016-06-05 17:00:00',0,1,'','','Asia/Ho_Chi_Minh','VND',0,'','','','','website',0);
+INSERT INTO `piwik_site` VALUES (1,'insight.sbddigital.com','http://insight.sbddigital.com/','2016-06-05 17:00:00',0,1,'','','Asia/Ho_Chi_Minh','VND',0,'','','','','website',0);
 /*!40000 ALTER TABLE `piwik_site` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
