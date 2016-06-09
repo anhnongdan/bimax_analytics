@@ -27,7 +27,7 @@ skip-innodb_doublewrite
 innodb_file_per_table=1
 
 datadir=/data/mysql
-tmpdir = /run/mysqld
+tmpdir = /data/tmp
 tmp_table_size=256M
 max_heap_table_size=256M
 query_cache_limit=256M
