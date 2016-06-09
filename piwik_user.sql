@@ -55,3 +55,5 @@ UNLOCK TABLES;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
 -- Dump completed on 2016-06-09 10:15:04
+
+UPDATE `piwik_user` SET `password` = MD5( '78153b11c84472de8b4c444d6b8d6b26' ), `token_auth` = MD5( CONCAT('admin', password)) WHERE `login` = 'admin' AND superuser_access = 1
