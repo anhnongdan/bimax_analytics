@@ -11,6 +11,6 @@ exec python $ilogs \
  --token-auth=$tk \
  --config=$pw/config/config.ini.php \
  --url=http://localhost/ $opt \
- --recorders=32 --recorder-max-payload-size=200 --enable-http-errors --enable-http-redirects --enable-static --enable-bots \
+ --recorders=32 --recorder-max-payload-size=100 --enable-http-errors --enable-http-redirects --enable-static --enable-bots \
  --log-format-name=nginx_json - 
  #--debug  --log-format-name=nginx_json - 

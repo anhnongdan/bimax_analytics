@@ -1287,8 +1287,10 @@ class Piwik(object):
             request.add_header("Authorization", "Basic %s" % base64string)
 
         opener = urllib2.build_opener(Piwik.RedirectHandlerWithLogging())
+        logging.debug(request)
         response = opener.open(request, timeout = timeout)
         result = response.read()
+        logging.debug(result)
         response.close()
         return result
 
@@ -1647,7 +1649,7 @@ class Recorder(object):
         """
         Returns the args used in tracking a hit, without the token_auth.
         """
-        logging.debug('_get_hit_args')
+        logging.info('_get_hit_args')
         site_id, main_url = resolver.resolve(hit)
         if site_id is None:
             # This hit doesn't match any known Piwik site.
@@ -2373,8 +2375,8 @@ class Parser(object):
                         invalid_line(line, 'invalid encoding')
                         continue
 
-                # logging.info('add hit')
-                # logging.info(hit)
+                #logging.info('add hit')
+                #logging.info(hit)
                 hits.append(hit)
 
                 if len(hits) >= config.options.recorder_max_payload_size * len(Recorder.recorders):

@@ -51,7 +51,7 @@ a_ts2= re.compile('(.*)(?:[_-])[0-9]+\.(ts|m3u8)')
 
 h_k1 = re.compile("^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}(\:\d+)?$")
 h_k2 = re.compile("\:\d+")
-NPIPE = 32
+NPIPE = 64
 def process_message(pp):
     if not pp or pp is None or 'time_local' not in pp or pp['time_local'] is None or 'status' not in pp or pp['status'] is None or 'body_bytes_sent' not in pp or  pp['body_bytes_sent'] is None or 'request_time' not in pp or pp['request_time'] is None:
         return None
@@ -130,23 +130,20 @@ def process_queue(i, q):
      logging.info("fork pid:%s" % s.pid)
      while True:
         try:
-            msg = None
             msg = q.get()
             if msg is None:
                 continue
-            msgp = None
             msgp = parser.parse_line(msg)
             if msgp is None:
                 continue
-            mm = None
             mm = process_message(msgp)
             if mm is not None:
                 s.stdin.write("%s\n" % str(mm))
-        #except IOError as e:
-        #    if e.errno == errno.EPIPE:
-        #        reload(s)
-        #        s = subprocess.Popen(command, bufsize=ISB, stdin=subprocess.PIPE)
-        #    pass
+        except IOError as e:
+            if e.errno == errno.EPIPE:
+                reload(s)
+                s = subprocess.Popen(command, bufsize=ISB, stdin=subprocess.PIPE)
+            pass
         except Exception, err:
             logging.info("e1:%s" % err)
             reload(s)
@@ -165,4 +162,4 @@ while True:
     except Exception, err:
         logging.info(err)
         pass 
-#myprocess.wait()
+myprocess.wait()
