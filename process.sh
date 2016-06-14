@@ -1,4 +1,5 @@
 #!/bin/sh
+
 log=/tmp/archive.log
 console=/usr/share/nginx/html/piwik/console
 queue(){

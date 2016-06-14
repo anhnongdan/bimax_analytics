@@ -1,20 +1,22 @@
 #!/usr/bin/python
 # import multiprocessing
-import sys, re, os, time, io, subprocess, logging, json, uuid
+import json
+import logging
+import re
+import subprocess
+import sys
+import time
 
 logging.basicConfig(filename='/tmp/scribe_pipe11.log',level=logging.DEBUG)
 
 from threading import Thread
-from Queue import Queue, Empty
+from Queue import Queue
 
 from shlex import split
 
 from nginx_log_parser import NginxLogParser
-from dateutil.parser import parse
 
-import _strptime
 from datetime import datetime, timedelta
-from pytz import timezone, utc
 from pytz.tzinfo import StaticTzInfo
 
 class OffsetTime(StaticTzInfo):
@@ -52,6 +54,7 @@ a_ts2= re.compile('(.*)(?:[_-])[0-9]+\.(ts|m3u8)')
 h_k1 = re.compile("^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}(\:\d+)?$")
 h_k2 = re.compile("\:\d+")
 NPIPE = 32
+
 def process_message(pp):
     if not pp or pp is None or 'time_local' not in pp or pp['time_local'] is None or 'status' not in pp or pp['status'] is None or 'body_bytes_sent' not in pp or  pp['body_bytes_sent'] is None or 'request_time' not in pp or pp['request_time'] is None:
         return None
@@ -65,8 +68,8 @@ def process_message(pp):
     timezone = timezonerr[1]
     request_urirr =  pp["request"].split(" ")
     if len(request_urirr) < 1 :
-        return None 
-    request_uri = request_urirr[1]
+        return None
+    request_uri = request_urir[1]
     request_uri = request_uri.split('?')[0]
 
     request_uri = re.sub(a_k1,'/$tk$/$ts$/', request_uri, re.M)
@@ -124,10 +127,13 @@ def reload(s):
     time.sleep(5)
 
 def process_queue(i, q):
-     logging.info("t:%d" % i)
+    now = datetime.now()
+    logging.info("[%s] t:%d" % (now, i))
      command = split("%s %d" % (commandline, i))
      s = subprocess.Popen(command, bufsize=ISB, stdin=subprocess.PIPE)
-     logging.info("fork pid:%s" % s.pid)
+
+
+logging.info("[%s] fork pid:%s" % (now, s.pid))
      while True:
         try:
             msg = None
@@ -148,21 +154,22 @@ def process_queue(i, q):
         #        s = subprocess.Popen(command, bufsize=ISB, stdin=subprocess.PIPE)
         #    pass
         except Exception, err:
-            logging.info("e1:%s" % err)
+            logging.info("[%s] e1:%s" % (current, err))
             reload(s)
             s = subprocess.Popen(command, bufsize=ISB, stdin=subprocess.PIPE)
             pass
-for i in range(NPIPE):
-    Thread(target=process_queue, name='q_msg_%d' % i,args=(i, q_msg)).start()
+        for i in range(NPIPE):
+            Thread(target=process_queue, name='q_msg_%d' % i, args=(i, q_msg)).start()
+
 
 while True:
     try:
         message = sys.stdin.readline()
-        #logging.info(message)
+        # logging.info(message)
         if not message:
             continue
         q_msg.put(message)
     except Exception, err:
         logging.info(err)
-        pass 
-#myprocess.wait()
+        pass
+        # myprocess.wait()
