@@ -131,9 +131,7 @@ def process_queue(i, q):
     logging.info("[%s] t:%d" % (now, i))
      command = split("%s %d" % (commandline, i))
      s = subprocess.Popen(command, bufsize=ISB, stdin=subprocess.PIPE)
-
-
-logging.info("[%s] fork pid:%s" % (now, s.pid))
+    logging.info("[%s] fork pid:%s" % (now, s.pid))
      while True:
         try:
             msg = None
@@ -147,6 +145,7 @@ logging.info("[%s] fork pid:%s" % (now, s.pid))
             mm = None
             mm = process_message(msgp)
             if mm is not None:
+                logging.info(str(mm))
                 s.stdin.write("%s\n" % str(mm))
         #except IOError as e:
         #    if e.errno == errno.EPIPE:
@@ -157,11 +156,11 @@ logging.info("[%s] fork pid:%s" % (now, s.pid))
             logging.info("[%s] e1:%s" % (current, err))
             reload(s)
             s = subprocess.Popen(command, bufsize=ISB, stdin=subprocess.PIPE)
-            pass
-        for i in range(NPIPE):
-            Thread(target=process_queue, name='q_msg_%d' % i, args=(i, q_msg)).start()
+            pass  # start n threads to process the queue
+for i in range(NPIPE):
+    Thread(target=process_queue, name='q_msg_%d' % i, args=(i, q_msg)).start()
 
-
+#read and queue messages, run forever, asynchronous with queue reading process
 while True:
     try:
         message = sys.stdin.readline()
