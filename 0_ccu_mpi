@@ -1,0 +1,5 @@
+#!/bin/sh
+proc="`tail -100 /data/logs/analytics.log| awk '/:flush:/' | tail -1 | awk -F':' 'NEGIN{s=0}{s+=$4}END{print s}'`"
+total="`tail -100 /data/logs/analytics.log| awk '/:total:/' | tail -1 | awk -F':' 'NEGIN{s=0}{s+=$4}END{print s}'`"
+echo "0 ccu_mpi_vnpt_01 ccu=$total|processed=$proc ccu=$total processed=$proc"
+

@@ -1,0 +1,306 @@
+#!/usr/bin/python
+import multiprocessing
+import sys, re, os, time, io, subprocess, logging, json, uuid
+from shlex import split
+
+
+
+from threading import Thread
+from Queue import Queue
+logging.basicConfig(filename='/data/logs/analytics_11.log',level=logging.DEBUG)
+
+from nginx_log_parser import NginxLogParser
+from dateutil.parser import parse
+
+from datetime import datetime, timedelta
+from pytz import timezone, utc
+from pytz.tzinfo import StaticTzInfo
+
+class OffsetTime(StaticTzInfo):
+    def __init__(self, offset):
+        """A dumb timezone based on offset such as +0530, -0600, etc.
+        """
+        hours = int(offset[:3])
+        minutes = int(offset[0] + offset[3:])
+        self._utcoffset = timedelta(hours=hours, minutes=minutes)
+
+def load_datetime(value, format):
+    if format.endswith('%z'):
+        format = format[:-2]
+        offset = value[-5:]
+        value = value[:-5]
+        return OffsetTime(offset).localize(datetime.strptime(value, format))
+
+    return datetime.strptime(value, format)
+
+def dump_datetime(value, format):
+    return value.strftime(format)
+#vnpt-hni-14 - - [meta sequenceId="49552677"] nginx:
+#parser = NginxLogParser('$request_time $remote_addr $sent_http_x_cache [$time_local] ' + \
+parser = NginxLogParser('$remote_host - - [$seq_id] nginx: $request_time $remote_addr $sent_http_x_cache [$time_local] ' + \
+			'"$request" $http_host $status $body_bytes_sent ' + \
+			'"$http_referer" "$http_user_agent" "$http_range"')
+#import redis
+#rd = redis.Redis(unix_socket_path='/tmp/redis.sock', db=0)
+
+NTIME = 1
+#GLOBALLOCK = multiprocessing.Lock()
+
+num_worker_process = 1
+num_worker_main = 1
+# t_timeout = 10
+tcount = 100000
+#tqueue = []
+
+def check_time1(atime):
+    cur = datetime.now()
+    min5 = cur.minute - (cur.minute % 5);
+    cur5 = cur.replace(minute=min5)
+    nn = cur5.strftime("5:%Y%m%d%H%M%z+0700")
+
+    if atime != nn:
+        return False
+    return True
+
+def check_time(tqueue1):
+    cur = datetime.now()
+    min5 = cur.minute - (cur.minute % 5);
+    cur5 = cur.replace(minute=min5)
+    nn = cur5.strftime("5:%Y%m%d%H%M%z+0700")
+    tt = tqueue1[0]
+    if tt['name'] != nn:
+        return False
+    return True
+
+def flush_queue(otherQueue, tqueue):
+    if len(tqueue) > 0:
+#and check_time(tqueue):
+        #GLOBALLOCK.acquire()
+        #logging.info("flush:%d" % len(tqueue))
+        otherQueue.put(tqueue[:])
+        tqueue[:] = []
+        #GLOBALLOCK.release()
+    else:
+        #logging.info("flush: onrotate")
+        tqueue[:] = []
+
+import uuid
+
+
+a_k1 = re.compile('(\/[a-zA-Z0-9]{32}\/[a-zA-Z0-9]{8}\/)+')
+a_k2 = re.compile('(\/[a-zA-Z0-9]{32}\/)+')
+a_k3 = re.compile('(\/[a-zA-Z0-9]{42}\/)+')
+
+a_ts = re.compile('(.*)\/[0-9]+\.(ts)')
+a_ts1 = re.compile('(.*)\_[0-9]+\.(ts)')
+a_ts2= re.compile('(.*)(?:[_-])[0-9]+\.(ts|m3u8)')
+
+h_k1 = re.compile("^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}(\:\d+)?$")
+h_k2 = re.compile("\:\d+")
+
+
+#cdn_gg0 = re.compile("^.*(vtv|htv|thvl).*$")
+#cdn_gg0 = re.compile("^.*(vtv|htv|thvl).*$")
+cdn_gg0 = re.compile("^.*(vtvgoeuro).*$")
+
+
+def process_message(pp):
+    if not pp or pp is None:
+        return None
+
+    http_host = pp["http_host"].strip()
+    if not re.match(cdn_gg0, http_host):
+        return None
+    if http_host == '-':
+        return None
+    match_ip = re.match(h_k1,http_host)
+    if match_ip:
+        return  None
+    match_port = re.match(h_k2,http_host)
+    if match_port:
+        return None
+    #logging.info(http_host) 
+    cur = load_datetime(pp['time_local'], '%d/%b/%Y:%H:%M:%S %z')
+    localtime = cur.isoformat()
+
+    timezonerr = pp['time_local'].split(" ")
+    if len(timezonerr) < 1 :
+        return None
+    timezone = timezonerr[1]
+    request_urirr =  pp["request"].split(" ")
+    if len(request_urirr) < 1 :
+        return None
+    request_uri = request_urirr[1]
+    request_uri = request_uri.split('?')[0]
+
+    request_uri = re.sub(a_k1,'/$tk$/$ts$/', request_uri, re.M)
+    request_uri = re.sub(a_k2,'/$tk$//', request_uri, re.M)
+    request_uri = re.sub(a_k3,'/$tk$//', request_uri, re.M)
+    request_uri = re.sub(a_ts,r'\1/$idx$.\2', request_uri , re.M)
+    request_uri = re.sub(a_ts1,r'\1_$idx$.\2', request_uri , re.M)
+    request_uri = re.sub(a_ts2,r'\1_$idx$.\2', request_uri , re.M)
+    referer = pp["http_referer"]
+    referer = referer.split('?')[0]
+
+
+    body_bytes_sent = pp["body_bytes_sent"]
+    if pp["status"] == "206":
+        pp["status"] = "200"
+    return json.dumps({
+        "ip": pp["remote_addr"],
+        "host": http_host,
+        "path": request_uri,
+        "status": pp["status"],
+        "referrer": referer,
+        "user_agent": pp["http_user_agent"],
+        "length": body_bytes_sent,
+        "generation_time_milli": pp["request_time"],
+        "timezone":timezone,
+        "date": localtime})
+
+
+def worker(myqueue, id):
+#    id=uuid.uuid4() 
+    NTIME = 5
+    cache_val = {}
+    logging.info("process start:%s" % id)
+    #rd = redis.Redis(unix_socket_path='/tmp/redis.sock', db=0)
+    commandline = '/mnt/app/bimax_analytics/piwik_pipe.sh'
+    command1 = split("%s %d %d" % (commandline, id, 1))
+    logging.info(command1)
+    pp = subprocess.Popen(command1, bufsize=1, stdin=subprocess.PIPE)
+    tqueue1 = []
+    oldut = 0
+    while True:
+        try:
+            item = myqueue.get()
+            #logging.info(len(item))
+	    tqueue1.append(item)
+            cur = datetime.now()
+            ut = int(time.mktime(cur.timetuple()))
+
+            send = False
+            if ut - oldut > NTIME:
+                oldut = ut
+                logging.info("pipe:%d" % len(tqueue1))
+                for kk in tqueue1:
+                    for mm in kk:
+                #        logging.info(mm)
+                        pp.stdin.write("%s\n" % str(mm))
+                #pp.stdin.flush()
+                tqueue1[:] = []
+        except Exception, err:
+            logging.info("worker:e:%s" % err)
+            continue
+
+
+
+
+def workerMain(mainQueue, otherQueue, ii):
+    if ii is None:
+        id=uuid.uuid4()
+    else:
+        id = ii
+    logging.info("main start:%s" % id)
+    cur = datetime.now()
+    utime = int(time.mktime(cur.timetuple()))
+    NTIME = 1
+    tqueue = []
+    while True:
+        try:
+            message = sys.stdin.readline()
+            if not message or message is None:
+                continue
+	    pp = parser.parse_line(message)
+	    if not pp or pp is None:
+		continue
+	    msg1 = process_message(pp)
+	    if not msg1 or msg1 is None:
+		continue
+	    tqueue.append(msg1)
+	    cur1 = datetime.now()
+	    utime1 = int(time.mktime(cur1.timetuple()))
+	    if utime1 - utime > NTIME:
+		utime = utime1
+                logging.info("flush:%d" % len(tqueue))
+		flush_queue(otherQueue, tqueue)
+		continue
+
+        except Exception, err:
+            pass 
+
+def create_thread(name, pool, func, qq):
+    i = len(pool) + 1
+    t = Thread(target=func, name='%s_%d' % (name, i),args=(i, qq))
+#    t = multiprocessing.Process(target=func , name='q_msg_%d' % i,args=(i, q_msg)) 
+    pool.append(t)
+    t.daemon = True
+    t.start()
+
+
+
+
+
+
+#QUEUE_W = multiprocessing.Queue()
+#QUEUE_M = multiprocessing.Queue()
+#t = multiprocessing.Process(target=worker, name='main_worker' ,args=(QUEUE_W, 1)) 
+#t.daemon = True
+#t.start()
+#POOL_W = multiprocessing.Pool(num_worker_process, worker,(QUEUE_W, 2, ))
+#POOL_M = multiprocessing.Pool(num_worker_main, workerMain,(QUEUE_M, QUEUE_W, sys.stdin, None))
+#t.join()
+POOL_W = []
+POOL_M = []
+QUEUE_W = Queue()
+QUEUE_M = Queue()
+POOL_W_INIT = 1
+POOL_M_INIT = 1
+POOL_W_MAX = 32
+POOL_M_MAX = 32
+
+def create_thread_m(pool, func, q1, q2):
+    i = len(pool) + 1
+    t = Thread(target=func, name='workerm_%d' % i,args=(q1, q2, i))
+    pool.append(t)
+    t.daemon = True
+    t.start()
+def create_thread_w(pool, func, q1):
+    i = len(pool) + 1
+    t = Thread(target=func, name='workerw_%d' % i,args=(q1, i))
+    pool.append(t)
+    t.daemon = True
+    t.start()
+
+for i in range(POOL_W_INIT):
+    create_thread_w(POOL_W, worker, QUEUE_W)
+for i in range(POOL_M_INIT):
+    create_thread_m(POOL_M, workerMain, QUEUE_M, QUEUE_W)
+
+def check_counter(POOL_M, POOL_W, QUEUE_W, QUEUE_M ):
+    while True:
+        time.sleep(10)
+        qs_w = QUEUE_W.qsize()
+        ls_w = len(POOL_W)
+        qs_m = QUEUE_M.qsize()
+        ls_m = len(POOL_M)
+        if ls_m <= POOL_M_MAX and qs_m >= 5000:
+            create_thread_m(POOL_M, workerMain, QUEUE_M, QUEUE_W)
+        if ls_w <= POOL_W_MAX and qs_w >= 5:
+            create_thread_w(POOL_W, worker, QUEUE_W)
+
+        logging.info("qs_m:%d p_m:%d qs_w:%d p_w:%d" % (qs_m, ls_m, qs_w, ls_w))
+
+
+
+tc = Thread(target=check_counter, name='counter',args=(POOL_M, POOL_W, QUEUE_W, QUEUE_M))
+tc.daemon = True
+tc.start()
+
+
+
+for q in POOL_W:
+    q.join()
+for q in POOL_M:
+    q.join()
+tc.join()

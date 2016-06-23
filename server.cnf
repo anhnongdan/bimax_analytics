@@ -1,0 +1,92 @@
+#
+# These groups are read by MariaDB server.
+# Use it for options that only the server (but not clients) should see
+#
+# See the examples of server my.cnf files in /usr/share/mysql/
+#
+
+# this is read by the standalone daemon and embedded servers
+[server]
+
+# this is only for the mysqld standalone daemon
+[mysqld]
+
+innodb_read_io_threads=32
+innodb_write_io_threads=32  #To stress the double write buffer
+innodb_buffer_pool_size=64G
+innodb_buffer_pool_load_at_startup=ON
+innodb_log_file_size = 128M #Small log files, more page flush
+innodb_log_files_in_group=2
+innodb_file_per_table=1
+innodb_log_buffer_size=16M
+innodb_flush_method=O_DIRECT
+innodb_flush_log_at_trx_commit=0
+skip-innodb_doublewrite  
+
+
+innodb_file_per_table=1
+
+datadir=/data/mysql
+tmpdir = /data/tmp
+tmp_table_size=256M
+max_heap_table_size=256M
+query_cache_limit=256M
+query_cache_size=256M
+query_cache_type=1
+#max_user_connections=45
+max_connections=2048
+#innodb_buffer_pool_size = 64G 
+
+collation_server=utf8_unicode_ci
+character_set_server=utf8
+
+#delayed_insert_timeout=40
+
+#interactive_timeout=10
+#wait_timeout=60
+#connect_timeout=20
+thread_cache_size=128
+key_buffer=64M
+join_buffer_size=64M
+#max_connect_errors=20
+max_allowed_packet=64M
+table_cache=4096
+sort_buffer_size=8M
+read_buffer_size=8M
+read_rnd_buffer_size=8M
+myisam_sort_buffer_size=64M
+
+
+#
+# enfenforcingorcingy Galera-related settings
+#
+[galera]
+# Mandatory settings
+#wsrep_on=ON
+#wsrep_provider=
+#wsrep_cluster_address=
+#binlog_format=row
+#default_storage_engine=InnoDB
+#innodb_autoinc_lock_mode=2
+#
+# Allow server to accept connections on all interfaces.
+#
+#bind-address=0.0.0.0
+#
+# Optional setting
+#wsrep_slave_threads=1
+#innodb_flush_log_at_trx_commit=0
+
+# this is only for embedded server
+[embedded]
+
+# This group is only read by MariaDB servers, not by MySQL.
+# If you use the same .cnf file for MySQL and MariaDB,
+# you can put MariaDB-only options here
+[mariadb]
+
+# This group is only read by MariaDB-10.1 servers.
+# If you use the same .cnf file for MariaDB of different versions,
+# use this group for options that older servers don't understand
+[mariadb-10.1]
+
