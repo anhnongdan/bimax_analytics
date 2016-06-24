@@ -1,8 +1,4 @@
 #!/bin/sh
-n=`pm2 l |grep queue-processing |wc -l`
-if [ -z "$n" ];then
-	n=0
-fi
-log=/tmp/queue_processed.log
-tail -100 /tmp/queue_processed.log |awk '{sub(/req.*$/,"",$8);if($8 > 0) print $8}' | tail -$n | awk 'BEGIN{s=0}{s+=$1}END{printf("0 queue_processed n=%d n=%d\n",s, s);}'
+n=`ls /root/.pm2/logs/queue-processing-out* |wc -l | awk '{print $1}'`
+tail /root/.pm2/logs/queue-processing-out* | grep "This worker" |  awk '{sub(/req.*$/,"",$7);if($7 > 0) print $7}' | tail -$n | awk 'BEGIN{s=0}{s+=$1}END{printf("0 queue_processed n=%d n=%d\n",s, s);}'
 
