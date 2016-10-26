@@ -1,0 +1,1 @@
+select count(*) from piwik_log_visit where custom_var_v1 like 'Lavf/' group by date(visit_last_action_time); 

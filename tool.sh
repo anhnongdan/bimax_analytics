@@ -1,17 +1,17 @@
 #!/bin/sh
-log=/tmp/archive.log
-console=/usr/share/nginx/html/piwik/console
-mysql="mysql -N -S /var/lib/mysql/mysql.sock -u piwik -h localhost  -p45608f80a0ff4aaef4f6cba464e4ac1c5a2d7158 piwik"
+log=/Users/ThangNguyen/www/piwikDev/log_importing/tmp/archive.log
+console=/Users/ThangNguyen/www/piwikDev/console
+mysql="mysql -N -u thang -h localhost  -ptatthang piwik"
 archive_today(){
        if [ -n "$1" ];then
        	opt="--force-idsites=$1"
        else 
 	opt="--force-all-websites"
        fi
-       idd=`echo "archive_today$@" | sha1sum | cut -d' ' -f1`  
-       flock=/tmp/${idd}.lock
+       idd=`echo "archive_today$@" | shasum | cut -d' ' -f1`  
+       flock=/Users/ThangNguyen/www/piwikDev/log_importing/tmp/${idd}.lock
        
-       log=/tmp/archive${1}.log
+       log=/Users/ThangNguyen/www/piwikDev/log_importing/tmp/archive${1}.log
        if [ -f $flock ];then
 		exit 0
        fi
@@ -25,9 +25,9 @@ archive(){
        else 
 	opt="--force-all-websites"
        fi
-       idd=`echo "archive_today$@" | sha1sum | cut -d' ' -f1`  
-       flock=/tmp/${idd}.lock
-       log=/tmp/archive${1}.log
+       idd=`echo "archive_today$@" | shasum | cut -d' ' -f1`  
+       flock=/Users/ThangNguyen/www/piwikDev/log_importing/tmp/${idd}.lock
+       log=/Users/ThangNguyen/www/piwikDev/log_importing/tmp/archive${1}.log
        #flock=/tmp/53370bf320a8cce14925ebc7f7191b0daf6d6c1a.lock
        if [ -f $flock ];then
 		exit 0
@@ -72,18 +72,21 @@ db_clean(){
         echo 'show tables;' | $mysql | grep piwik_archive_ | while read tb;do echo "drop table $tb;" | $mysql ;done
         echo 'show tables;' | $mysql | grep piwik_log_ | while read tb;do echo "truncate table $tb;" | $mysql ;done
 }
+db_archive_clean(){
+        echo 'show tables;' | $mysql | grep piwik_archive_ | while read tb;do echo "drop table $tb;" | $mysql ;done
+}
 clean(){
         db_clean
 	pw_site_delall
  	pw_site_reset
         re_clean
-	mysql piwik < /mnt/app/bimax_analytics/piwik_site.sql
+	mysql piwik < /Users/ThangNguyen/www/piwikDev/log_importing/piwik_site.sql
 }
 queue(){
         $console queuedtracking:$@
 }
 sp(){
-	process=/mnt/app/bimax_analytics/process.sh
+	process=/Users/ThangNguyen/www/piwikDev/log_importing/process.sh
         n=$1
         if [ -z $n ];then
                 n=16

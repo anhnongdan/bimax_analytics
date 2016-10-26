@@ -1,8 +1,10 @@
 #!/usr/bin/python
 import multiprocessing
 import sys, re, os, time, io, subprocess, logging, json, uuid
+from os import getcwd
 
-logging.basicConfig(filename='/tmp/scribe_pipe11.log',level=logging.DEBUG)
+__path__ = format(getcwd())
+logging.basicConfig(filename=__path__+'/scribe_pipe11.log',level=logging.DEBUG)
 
 from threading import Thread
 from Queue import Queue, Empty
@@ -37,7 +39,7 @@ def load_datetime(value, format):
 def dump_datetime(value, format):
     return value.strftime(format)
 
-commandline = '/mnt/app/bimax_analytics/piwik_pipe.sh'
+commandline = __path__ + '/piwik_pipe.sh'
 parser = NginxLogParser('$request_time $remote_addr $sent_http_x_cache [$time_local] ' + \
 			'"$request" $http_host $status $body_bytes_sent ' + \
 			'"$http_referer" "$http_user_agent" "$http_range"')

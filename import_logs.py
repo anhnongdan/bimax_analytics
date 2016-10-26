@@ -53,34 +53,20 @@ except ImportError:
 
 
 
-h_k1 = re.compile("^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}(\:\d+)?$")
-h_k2 = re.compile("\:\d+")
 ##
 ## Constants.
 ##
-CUSTOM_MEDIA_EXTENSIONS = set((
-    'm3u8$ ts$ m3u$'
-).split())
 
 STATIC_EXTENSIONS = set((
-    ''
-    # 'gif jpg jpeg png bmp ico svg svgz ttf otf eot woff class swf css js xml robots.txt webp'
+    'gif jpg jpeg png bmp ico svg svgz ttf otf eot woff class swf css js xml robots.txt webp'
 ).split())
 
-# '7z aac arc arj asf asx avi bin csv deb dmg doc docx exe flv gz gzip hqx '
-# 'ibooks jar mpg mp2 mp3 mp4 m4v mpeg mov movie msi msp odb odf odg odp '
-# 'ods odt ogg ogv pdf phps ppt pptx qt qtm ra ram rar rpm sea sit tar tbz '
-# 'bz2 tbz tgz torrent txt wav wma wmv wpd xls xlsx xml xsd z zip '
-# 'azw3 epub mobi apk ass idx mpl pjs psb sami smi srt ssa sub vtt'
-
-
 DOWNLOAD_EXTENSIONS = set((
-    ''
-# '7z aac arc arj asf asx avi bin csv deb dmg doc docx exe flv gz gzip hqx '
-# 'ibooks jar mpg mp2 mp3 mp4 m4v mpeg mov movie msi msp odb odf odg odp '
-# 'ods odt ogg ogv pdf phps ppt pptx qt qtm ra ram rar rpm sea sit tar tbz '
-# 'bz2 tbz tgz torrent txt wav wma wmv wpd xls xlsx xml xsd z zip '
-# 'azw3 epub mobi apk ass idx mpl pjs psb sami smi srt ssa sub vtt'
+    '7z aac arc arj asf asx avi bin csv deb dmg doc docx exe flv gz gzip hqx '
+    'ibooks jar mpg mp2 mp3 mp4 mpeg mov movie msi msp odb odf odg odp '
+    'ods odt ogg ogv pdf phps ppt pptx qt qtm ra ram rar rpm sea sit tar tbz '
+    'bz2 tbz tgz torrent txt wav wma wmv wpd xls xlsx xml xsd z zip '
+    'azw3 epub mobi apk'
 ).split())
 
 # A good source is: http://phpbb-bots.blogspot.com/
@@ -135,7 +121,11 @@ class BaseFormat(object):
 
     def check_format(self, file):
         line = file.readline()
-        file.seek(0)
+        try:
+            file.seek(0)
+        except IOError:
+            pass
+
         return self.check_format_line(line)
 
     def check_format_line(self, line):
@@ -148,27 +138,22 @@ class JsonFormat(BaseFormat):
         self.date_format = '%Y-%m-%dT%H:%M:%S'
 
     def check_format_line(self, line):
-        # logging.info('check_format_line')
         try:
-            # logging.info(line)
-            self.json = json.loads(line, strict=False)
+            self.json = json.loads(line)
             return True
         except:
             return False
 
     def match(self, line):
-        # logging.info('match')
         try:
-            # logging.info(line)
             # nginx outputs malformed JSON w/ hex escapes when confronted w/ non-UTF input. we have to
             # workaround this by converting hex escapes in strings to unicode escapes. the conversion is naive,
             # so it does not take into account the string's actual encoding (which we don't have access to).
             line = line.replace('\\x', '\\u00')
 
-            self.json = json.loads(line, strict=False)
+            self.json = json.loads(line)
             return self
         except:
-            logging.info('json fail')
             self.json = None
             return None
 
@@ -257,12 +242,20 @@ class W3cExtendedFormat(RegexFormat):
 
         # if we couldn't create a regex, this file does not follow the W3C extended log file format
         if not self.regex:
-            file.seek(0)
+            try:
+                file.seek(0)
+            except IOError:
+                pass
+
             return
 
         first_line = file.readline()
 
-        file.seek(0)
+        try:
+            file.seek(0)
+        except IOError:
+            pass
+
         return self.check_format_line(first_line)
 
     def create_regex(self, file):
@@ -420,6 +413,11 @@ _S3_LOG_FORMAT = (
 _ICECAST2_LOG_FORMAT = ( _NCSA_EXTENDED_LOG_FORMAT +
     '\s+(?P<session_time>\S+)'
 )
+_ELB_LOG_FORMAT = (
+    '(?P<date>[0-9-]+T[0-9:]+)\.\S+\s+\S+\s+(?P<ip>\S+):\d+\s+\S+:\d+\s+\S+\s+(?P<generation_time_secs>\S+)\s+\S+\s+'
+    '(?P<status>\S+)\s+\S+\s+\S+\s+(?P<length>\S+)\s+'
+    '"\S+\s+\w+:\/\/(?P<host>[\w\-\.]*):\d+(?P<path>\/\S*)\s+[^"]+"\s+"(?P<user_agent>[^"]+)"\s+\S+\s+\S+'
+)
 
 FORMATS = {
     'common': RegexFormat('common', _COMMON_LOG_FORMAT),
@@ -432,6 +430,7 @@ FORMATS = {
     'shoutcast': ShoutcastFormat(),
     's3': RegexFormat('s3', _S3_LOG_FORMAT),
     'icecast2': RegexFormat('icecast2', _ICECAST2_LOG_FORMAT),
+    'elb': RegexFormat('elb', _ELB_LOG_FORMAT, '%Y-%m-%dT%H:%M:%S'),
     'nginx_json': JsonFormat('nginx_json'),
 }
 
@@ -550,7 +549,9 @@ class Configuration(object):
         )
         option_parser.add_option(
             '--token-auth', dest='piwik_token_auth',
-            help="Piwik Super User token_auth, 32 characters hexadecimal string, found in Piwik > API",
+            help="Piwik user token_auth, the token_auth is found in Piwik > Settings > API. "
+                 "You must use a token_auth that has at least 'admin' or 'super user' permission. "
+                 "If you use a token_auth for a non admin user, your users' IP addresses will not be tracked properly. "
         )
 
         option_parser.add_option(
@@ -813,7 +814,6 @@ class Configuration(object):
 
         # Configure logging before calling logging.{debug,info}.
         logging.basicConfig(
-            filename='/tmp/imports_log.log',
             format='%(asctime)s: [%(levelname)s] %(message)s',
             level=logging.DEBUG if self.options.debug >= 1 else logging.INFO,
         )
@@ -1043,7 +1043,6 @@ class Statistics(object):
         self.count_lines_hostname_skipped = self.Counter()
         # Static files.
         self.count_lines_static = self.Counter()
-        self.count_lines_custom_media = self.Counter()
         # Ignored user-agents.
         self.count_lines_skipped_user_agent = self.Counter()
         # Ignored HTTP erors.
@@ -1284,13 +1283,11 @@ class Piwik(object):
 
         if auth_user is not None:
             base64string = base64.encodestring('%s:%s' % (auth_user, auth_password)).replace('\n', '')
-            request.add_header("Authorization", "Basic %s" % base64string)
+            request.add_header("Authorization", "Basic %s" % base64string)        
 
         opener = urllib2.build_opener(Piwik.RedirectHandlerWithLogging())
-        logging.debug(request)
         response = opener.open(request, timeout = timeout)
         result = response.read()
-        logging.debug(result)
         response.close()
         return result
 
@@ -1331,7 +1328,7 @@ class Piwik(object):
                 final_args.append((key, value))
         res = Piwik._call('/', final_args, url=url)
         try:
-            return json.loads(res, strict=False)
+            return json.loads(res)
         except ValueError:
             raise urllib2.URLError('Piwik returned an invalid response: ' + res)
 
@@ -1400,7 +1397,6 @@ class StaticResolver(object):
     """
 
     def __init__(self, site_id):
-        logging.info('site_id:' + site_id)
         self.site_id = site_id
         # Go get the main URL
         site = piwik.call_api(
@@ -1433,14 +1429,12 @@ class DynamicResolver(object):
             self._cache['sites'] = piwik.call_api('SitesManager.getAllSites')
 
     def _get_site_id_from_hit_host(self, hit):
-        logging.info('_get_site_id_from_hit_host')
         return piwik.call_api(
             'SitesManager.getSitesIdFromSiteUrl',
             url=hit.host,
         )
 
     def _add_site(self, hit):
-        logging.info('_add_site')
         main_url = 'http://' + hit.host
         DynamicResolver._add_site_lock.acquire()
 
@@ -1460,10 +1454,6 @@ class DynamicResolver(object):
                     # Let's just return a fake ID.
                     return 0
                 logging.debug('Creating a Piwik site for hostname %s', hit.host)
-                if hit.status != '200' and hit.status != '206':
-                    return None 
-                if re.match(h_k1, hit.host) or re.match(h_k2, hit.host):
-                    return None
                 result = piwik.call_api(
                     'SitesManager.addSite',
                     siteName=hit.host,
@@ -1486,7 +1476,6 @@ class DynamicResolver(object):
             DynamicResolver._add_site_lock.release()
 
     def _resolve(self, hit):
-        logging.info('_resolve')
         res = self._get_site_id_from_hit_host(hit)
         if res:
             # The site already exists.
@@ -1649,7 +1638,6 @@ class Recorder(object):
         """
         Returns the args used in tracking a hit, without the token_auth.
         """
-        logging.info('_get_hit_args')
         site_id, main_url = resolver.resolve(hit)
         if site_id is None:
             # This hit doesn't match any known Piwik site.
@@ -1694,11 +1682,11 @@ class Recorder(object):
         if config.options.replay_tracking:
             # prevent request to be force recorded when option replay-tracking
             args['rec'] = '0'
-
+            
         # idsite is already determined by resolver
         if 'idsite' in hit.args:
             del hit.args['idsite']
-
+            
         args.update(hit.args)
 
         if hit.is_download:
@@ -1712,55 +1700,11 @@ class Recorder(object):
 				hit.status,
 				config.options.title_category_delimiter,
 				urllib.quote(args['url'], ''),
-				("%sFrom = %s" % (
+				("%sFrom = %s" % ( 
 					config.options.title_category_delimiter,
 					urllib.quote(args['urlref'], '')
 				) if args['urlref'] != ''  else '')
 			)
-
-        # try:
-        # logging.debug('hit.status:%s' % hit.status)
-        # logging.debug('hit.extension:%s' % hit.extension)
-        # if hit.status == '200' and hasattr(hit, 'is_custom_media') and
-        # if hit.status == '200' and hit.is_custom_media:
-        if hit.status == '200':
-            logging.debug("hit.extension: %s"  % hit.extension)
-        # #     logging.debug('is_custom_media:%s' % hit.is_custom_media)
-        # #     if not hasattr(args, 'action_name') or args['action_name'] is None:
-        # #         # logging.debug('vao day')
-        #     if hit.is_custom_media:
-        #         args['action_name'] = '%s%s%s' % (
-        #         	hit.status,
-        #             config.options.title_category_delimiter,
-        #             "$%s" % hit.extension
-        #         )
-        #     elif hit.extension:
-            if not hit.extension or hit.extension.isspace():
-                hit.extension = 'no_ext'
-                logging.debug('url:%s' % args['url'])
-            	args['action_name'] = '%s%s%s%sURL = %s%s' % (
-    				hit.status,
-    				config.options.title_category_delimiter,
-                    hit.extension,
-                    config.options.title_category_delimiter,
-    				urllib.quote(args['url'], ''),
-    				("%sFrom = %s" % (
-    					config.options.title_category_delimiter,
-    					urllib.quote(args['urlref'], '')
-    				) if args['urlref'] != ''  else '')
-    			)
-            else:
-                args['action_name'] = '%s%s%s' % (
-                	hit.status,
-                    config.options.title_category_delimiter,
-                    hit.extension
-                )
-        # else:
-        #     logging.debug('url:%s' % args['url'])
-        #     logging.debug('ext:%s' % hit.extension)
-        # logging.debug('action_name:%s' % args['action_name'])
-        # except KeyError:
-        #     logging.debug("action_name not found")
 
         if hit.generation_time_milli > 0:
             args['gt_ms'] = int(hit.generation_time_milli)
@@ -1818,17 +1762,17 @@ class Recorder(object):
 
                 # check for invalid requests
                 try:
-                    response = json.loads(response, strict=False)
+                    response = json.loads(response)
                 except:
-                    # logging.info("bulk tracking returned invalid JSON")
+                    logging.info("bulk tracking returned invalid JSON")
 
                     # don't display the tracker response if we're debugging the tracker.
                     # debug tracker output will always break the normal JSON output.
-                    # if not config.options.debug_tracker:
-                    #     logging.info("tracker response:\n%s" % response)
+                    if not config.options.debug_tracker:
+                        logging.info("tracker response:\n%s" % response)
 
                     response = {}
-
+                
                 if ('invalid_indices' in response and isinstance(response['invalid_indices'], list) and
                     response['invalid_indices']):
                     invalid_count = len(response['invalid_indices'])
@@ -1852,7 +1796,7 @@ class Recorder(object):
 
     def _is_json(self, result):
         try:
-            json.loads(result, strict=False)
+            json.loads(result)
             return True
         except ValueError, e:
             return False
@@ -1863,7 +1807,7 @@ class Recorder(object):
         they are not logged twice.
         """
         try:
-            response = json.loads(response, strict=False)
+            response = json.loads(response)
         except:
             # the response should be in JSON, but in case it can't be parsed just try another attempt
             logging.debug("cannot parse tracker response, should be valid JSON")
@@ -1957,16 +1901,6 @@ class Parser(object):
             else:
                 stats.count_lines_static.increment()
                 return False
-        return True
-
-    def check_custom_media(self, hit):
-        if hit.extension in CUSTOM_MEDIA_EXTENSIONS:
-            # if config.options.enable_custom_media:
-            hit.is_custom_media = True
-            # else:
-            # return True
-            #     stats.count_lines_custom_media.increment()
-            #     return False
         return True
 
     def check_download(self, hit):
@@ -2182,208 +2116,187 @@ class Parser(object):
         hits = []
         lineno = -1
         while True:
+            line = file.readline()
+            if not line: break
+            lineno = lineno + 1
+
             try:
-                line = file.readline()
-                if not line: break
-                lineno = lineno + 1
+                line = line.decode(config.options.encoding)
+            except UnicodeDecodeError:
+                invalid_line(line, 'invalid encoding')
+                continue
+
+            stats.count_lines_parsed.increment()
+            if stats.count_lines_parsed.value <= config.options.skip:
+                continue
+
+            match = format.match(line)
+            if not match:
+                invalid_line(line, 'line did not match')
+                continue
+
+            valid_lines_count = valid_lines_count + 1
+            if config.options.debug_request_limit and valid_lines_count >= config.options.debug_request_limit:
+                if len(hits) > 0:
+                    Recorder.add_hits(hits)
+                logging.info("Exceeded limit specified in --debug-request-limit, exiting.")
+                return
+
+            hit = Hit(
+                filename=filename,
+                lineno=lineno,
+                status=format.get('status'),
+                full_path=format.get('path'),
+                is_download=False,
+                is_robot=False,
+                is_error=False,
+                is_redirect=False,
+                args={},
+            )
+
+            if config.options.regex_group_to_page_cvars_map:
+                self._add_custom_vars_from_regex_groups(hit, format, config.options.regex_group_to_page_cvars_map, True)
+
+            if config.options.regex_group_to_visit_cvars_map:
+                self._add_custom_vars_from_regex_groups(hit, format, config.options.regex_group_to_visit_cvars_map, False)
+
+            if config.options.regex_groups_to_ignore:
+                format.remove_ignored_groups(config.options.regex_groups_to_ignore)
+
+            try:
+                hit.query_string = format.get('query_string')
+                hit.path = hit.full_path
+            except BaseFormatException:
+                hit.path, _, hit.query_string = hit.full_path.partition(config.options.query_string_delimiter)
+
+            # W3cExtendedFormat detaults to - when there is no query string, but we want empty string
+            if hit.query_string == '-':
+                hit.query_string = ''
+
+            hit.extension = hit.path.rsplit('.')[-1].lower()
+
+            try:
+                hit.referrer = format.get('referrer')
+
+                if hit.referrer.startswith('"'):
+                    hit.referrer = hit.referrer[1:-1]
+            except BaseFormatException:
+                hit.referrer = ''
+            if hit.referrer == '-':
+                hit.referrer = ''
+
+            try:
+                hit.user_agent = format.get('user_agent')
+
+                # in case a format parser included enclosing quotes, remove them so they are not
+                # sent to Piwik
+                if hit.user_agent.startswith('"'):
+                    hit.user_agent = hit.user_agent[1:-1]
+            except BaseFormatException:
+                hit.user_agent = ''
+
+            hit.ip = format.get('ip')
+            try:
+                hit.length = int(format.get('length'))
+            except (ValueError, BaseFormatException):
+                # Some lines or formats don't have a length (e.g. 304 redirects, W3C logs)
+                hit.length = 0
+
+            try:
+                hit.generation_time_milli = float(format.get('generation_time_milli'))
+            except BaseFormatException:
+                try:
+                    hit.generation_time_milli = float(format.get('generation_time_micro')) / 1000
+                except BaseFormatException:
+                    try:
+                        hit.generation_time_milli = float(format.get('generation_time_secs')) * 1000
+                    except BaseFormatException:
+                        hit.generation_time_milli = 0
+
+            if config.options.log_hostname:
+                hit.host = config.options.log_hostname
+            else:
+                try:
+                    hit.host = format.get('host').lower().strip('.')
+
+                    if hit.host.startswith('"'):
+                        hit.host = hit.host[1:-1]
+                except BaseFormatException:
+                    # Some formats have no host.
+                    pass
+
+            # Add userid
+            try:
+                hit.userid = None
+
+                userid = format.get('userid')
+                if userid != '-':
+                    hit.args['uid'] = hit.userid = userid
+            except:
+                pass
+
+            # add event info
+            try:
+                hit.event_category = hit.event_action = hit.event_name = None
+
+                hit.event_category = format.get('event_category')
+                hit.event_action = format.get('event_action')
+
+                hit.event_name = format.get('event_name')
+                if hit.event_name == '-':
+                    hit.event_name = None
+            except:
+                pass
+
+            # Check if the hit must be excluded.
+            if not all((method(hit) for method in self.check_methods)):
+                continue
+
+            # Parse date.
+            # We parse it after calling check_methods as it's quite CPU hungry, and
+            # we want to avoid that cost for excluded hits.
+            date_string = format.get('date')
+            try:
+                hit.date = datetime.datetime.strptime(date_string, format.date_format)
+            except ValueError, e:
+                invalid_line(line, 'invalid date or invalid format: %s' % str(e))
+                continue
+
+            # Parse timezone and substract its value from the date
+            try:
+                timezone = float(format.get('timezone'))
+            except BaseFormatException:
+                timezone = 0
+            except ValueError:
+                invalid_line(line, 'invalid timezone')
+                continue
+
+            if timezone:
+                hit.date -= datetime.timedelta(hours=timezone/100)
+
+            if config.options.replay_tracking:
+                # we need a query string and we only consider requests with piwik.php
+                if not hit.query_string or not hit.path.lower().endswith(config.options.replay_tracking_expected_tracker_file):
+                    invalid_line(line, 'no query string, or ' + hit.path.lower() + ' does not end with piwik.php')
+                    continue
+
+                query_arguments = urlparse.parse_qs(hit.query_string)
+                if not "idsite" in query_arguments:
+                    invalid_line(line, 'missing idsite')
+                    continue
 
                 try:
-                    line = line.decode(config.options.encoding)
+                    hit.args.update((k, v.pop().encode('raw_unicode_escape').decode(config.options.encoding)) for k, v in query_arguments.iteritems())
                 except UnicodeDecodeError:
                     invalid_line(line, 'invalid encoding')
                     continue
 
-                stats.count_lines_parsed.increment()
-                if stats.count_lines_parsed.value <= config.options.skip:
-                    continue
+            hits.append(hit)
 
-                match = format.match(line)
-                if not match:
-                    invalid_line(line, 'line did not match')
-                    continue
+            if len(hits) >= config.options.recorder_max_payload_size * len(Recorder.recorders):
+                Recorder.add_hits(hits)
+                hits = []
 
-                valid_lines_count = valid_lines_count + 1
-                # logging.info(valid_lines_count)
-                if config.options.debug_request_limit and valid_lines_count >= config.options.debug_request_limit:
-                    if len(hits) > 0:
-                        Recorder.add_hits(hits)
-                    logging.info("Exceeded limit specified in --debug-request-limit, exiting.")
-                    return
-
-                hit = Hit(
-                    filename=filename,
-                    lineno=lineno,
-                    status=format.get('status'),
-                    full_path=format.get('path'),
-                    is_download=False,
-                    is_custom_media=False,
-                    is_robot=False,
-                    is_error=False,
-                    is_redirect=False,
-                    args={},
-                )
-                # logging.info(hit)
-                if config.options.regex_group_to_page_cvars_map:
-                    self._add_custom_vars_from_regex_groups(hit, format, config.options.regex_group_to_page_cvars_map, True)
-
-                if config.options.regex_group_to_visit_cvars_map:
-                    self._add_custom_vars_from_regex_groups(hit, format, config.options.regex_group_to_visit_cvars_map, False)
-
-                if config.options.regex_groups_to_ignore:
-                    format.remove_ignored_groups(config.options.regex_groups_to_ignore)
-
-                # logging.info(format)
-                try:
-                    hit.query_string = format.get('query_string')
-                    # logging.info("qs:" + hit.query_string)
-                    hit.path = hit.full_path
-                except BaseFormatException:
-                    hit.path, _, hit.query_string = hit.full_path.partition(config.options.query_string_delimiter)
-
-                # W3cExtendedFormat detaults to - when there is no query string, but we want empty string
-                if hit.query_string == '-':
-                    hit.query_string = ''
-
-                fname = hit.path.rsplit('/')[-1]
-                # logging.debug('fname:%s %d' % (fname, len(fname)))
-                # kk = hit.path.rsplit('_$')
-                # logging.debug('kk len:%d' % len(kk))
-                # logging.debug(kk)
-                # if len(kk) > 1:
-                #     hit.extension = kk[-1].lower()
-                # else:
-                # if not hit.extension or hit.extension.isspace():
-                hit.extension = fname.rsplit('.')[-1].lower()
-
-                # logging.debug('hit.extension: %s' % hit.extension)
-                try:
-                    hit.referrer = format.get('referrer')
-
-                    if hit.referrer.startswith('"'):
-                        hit.referrer = hit.referrer[1:-1]
-                except BaseFormatException:
-                    hit.referrer = ''
-                if hit.referrer == '-':
-                    hit.referrer = ''
-
-                try:
-                    hit.user_agent = format.get('user_agent')
-
-                    # in case a format parser included enclosing quotes, remove them so they are not
-                    # sent to Piwik
-                    if hit.user_agent.startswith('"'):
-                        hit.user_agent = hit.user_agent[1:-1]
-                except BaseFormatException:
-                    hit.user_agent = ''
-
-                hit.ip = format.get('ip')
-                try:
-                    hit.length = int(format.get('length'))
-                except (ValueError, BaseFormatException):
-                    # Some lines or formats don't have a length (e.g. 304 redirects, W3C logs)
-                    hit.length = 0
-
-                try:
-                    hit.generation_time_milli = float(format.get('generation_time_milli'))
-                except BaseFormatException:
-                    try:
-                        hit.generation_time_milli = float(format.get('generation_time_micro')) / 1000
-                    except BaseFormatException:
-                        try:
-                            hit.generation_time_milli = float(format.get('generation_time_secs')) * 1000
-                        except BaseFormatException:
-                            hit.generation_time_milli = 0
-
-                # logging.info("host:" + format.get('host'))
-                if config.options.log_hostname:
-                    hit.host = config.options.log_hostname
-                else:
-                    try:
-                        hit.host = format.get('host').lower().strip('.')
-                        # logging.info("hithost:" + hit.host)
-                        if hit.host.startswith('"'):
-                            hit.host = hit.host[1:-1]
-
-                    except BaseFormatException:
-                        # Some formats have no host.
-                        pass
-                # logging.info("hithost:" + hit.host)
-                # Add userid
-                try:
-                    hit.userid = None
-
-                    userid = format.get('userid')
-                    if userid != '-':
-                        hit.args['uid'] = hit.userid = userid
-                except:
-                    pass
-                # logging.info("hithost:" + hit.host)
-                # add event info
-                try:
-                    hit.event_category = hit.event_action = hit.event_name = None
-
-                    hit.event_category = format.get('event_category')
-                    hit.event_action = format.get('event_action')
-
-                    hit.event_name = format.get('event_name')
-                    if hit.event_name == '-':
-                        hit.event_name = None
-                except:
-                    pass
-                # logging.info('add hit')
-                # Check if the hit must be excluded.
-                if not all((method(hit) for method in self.check_methods)):
-                    continue
-                # logging.info('add hit')
-                # Parse date.
-                # We parse it after calling check_methods as it's quite CPU hungry, and
-                # we want to avoid that cost for excluded hits.
-                date_string = format.get('date')
-                try:
-                    hit.date = datetime.datetime.strptime(date_string, format.date_format)
-                except ValueError, e:
-                    # logging.info(str(e))
-                    invalid_line(line, 'invalid date or invalid format: %s' % str(e))
-                    continue
-                # logging.info('add hit')
-                # Parse timezone and substract its value from the date
-                try:
-                    timezone = float(format.get('timezone'))
-                except BaseFormatException:
-                    timezone = 0
-                except ValueError:
-                    invalid_line(line, 'invalid timezone')
-                    continue
-
-                if timezone:
-                    hit.date -= datetime.timedelta(hours=timezone/100)
-                # logging.info('add hit')
-                if config.options.replay_tracking:
-                    # we need a query string and we only consider requests with piwik.php
-                    if not hit.query_string or not hit.path.lower().endswith(config.options.replay_tracking_expected_tracker_file):
-                        invalid_line(line, 'no query string, or ' + hit.path.lower() + ' does not end with piwik.php')
-                        continue
-
-                    query_arguments = urlparse.parse_qs(hit.query_string)
-                    if not "idsite" in query_arguments:
-                        logging.info(line, 'missing idsite')
-                        continue
-
-                    try:
-                        hit.args.update((k, v.pop().encode('raw_unicode_escape').decode(config.options.encoding)) for k, v in query_arguments.iteritems())
-                    except UnicodeDecodeError:
-                        invalid_line(line, 'invalid encoding')
-                        continue
-
-                #logging.info('add hit')
-                #logging.info(hit)
-                hits.append(hit)
-
-                if len(hits) >= config.options.recorder_max_payload_size * len(Recorder.recorders):
-                    Recorder.add_hits(hits)
-                    hits = []
-            except:
-                pass
         # add last chunk of hits
         if len(hits) > 0:
             Recorder.add_hits(hits)

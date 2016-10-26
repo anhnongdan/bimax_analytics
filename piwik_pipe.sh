@@ -1,16 +1,18 @@
 #!/bin/sh
-import=/mnt/app/bimax_analytics 
-pw=/usr/share/nginx/html/piwik
+import=/Users/ThangNguyen/www/piwikDev/log_importing 
+pw=/Users/ThangNguyen/www/piwikDev/
 ilogs=$import/import_logs.py
-tk=126414e1cfe26bf6cc00a9a0e366c1f7
+tk=58b4c4b1bde5d7dad865c2d8f255ef08
 opt=""
-if [ $1 -eq 0  ];then
-	opt="--add-sites-new-hosts"
-fi
+
+#use newer double bracket to evoid parameter parsing problem
+#if [[ $1 -eq 1 ]];then
+    opt="--add-sites-new-host"
+#fi
 exec python $ilogs \
  --token-auth=$tk \
  --config=$pw/config/config.ini.php \
  --url=http://localhost/ $opt \
  --recorders=32 --recorder-max-payload-size=100 --enable-http-errors --enable-http-redirects --enable-static --enable-bots \
- --log-format-name=nginx_json - 
- #--debug  --log-format-name=nginx_json - 
+ --log-format-name=nginx_json -
+ #--debug

@@ -1,24 +1,22 @@
 #!/usr/bin/python
-# import multiprocessing
-import json
-import logging
-import re
-import subprocess
-import sys
-import time
+import multiprocessing
+import sys, re, os, time, io, subprocess, logging, json, uuid
 from os import getcwd
 
 __path__ = format(getcwd())
 logging.basicConfig(filename=__path__+'/scribe_pipe11.log',level=logging.DEBUG)
 
 from threading import Thread
-from Queue import Queue
+from Queue import Queue, Empty
 
 from shlex import split
 
 from nginx_log_parser import NginxLogParser
+from dateutil.parser import parse
 
+import _strptime
 from datetime import datetime, timedelta
+from pytz import timezone, utc
 from pytz.tzinfo import StaticTzInfo
 
 class OffsetTime(StaticTzInfo):
@@ -43,8 +41,8 @@ def dump_datetime(value, format):
 
 commandline = __path__ + '/piwik_pipe.sh'
 parser = NginxLogParser('$request_time $remote_addr $sent_http_x_cache [$time_local] ' + \
-			'"$request" $http_host $status $body_bytes_sent ' + \
-			'"$http_referer" "$http_user_agent" "$http_range"')
+                        '"$request" $http_host $status $body_bytes_sent ' + \
+                        '"$http_referer" "$http_user_agent" "$http_range"')
 a_k1 = re.compile('(\/[a-zA-Z0-9]{32}\/[a-zA-Z0-9]{8}\/)+')
 a_k2 = re.compile('(\/[a-zA-Z0-9]{32}\/)+')
 a_k3 = re.compile('(\/[a-zA-Z0-9]{42}\/)+')
@@ -57,12 +55,11 @@ h_k1 = re.compile("^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}(\:\d+)?$")
 h_k2 = re.compile("\:\d+")
 
 
-#cdn_gg0 = re.compile("^.*(htv|thvl).*$")
-#cdn_gg1 = re.compile("^.*(vtv).*$")
+cdn_gg0 = re.compile("^.*(htv|thvl).*$")
+cdn_gg1 = re.compile("^.*(vtv).*$")
 
 
 NPIPE = 1
-
 def process_message(pp):
     if not pp or pp is None:
         return None
@@ -77,7 +74,6 @@ def process_message(pp):
     request_urirr =  pp["request"].split(" ")
     if len(request_urirr) < 1 :
         return None
-    #This should be request_urirr[1] not request_urir
     request_uri = request_urirr[1]
     request_uri = request_uri.split('?')[0]
 
@@ -87,7 +83,6 @@ def process_message(pp):
     request_uri = re.sub(a_ts,r'\1/$idx$.\2', request_uri , re.M)
     request_uri = re.sub(a_ts1,r'\1_$idx$.\2', request_uri , re.M)
     request_uri = re.sub(a_ts2,r'\1_$idx$.\2', request_uri , re.M)
-
 
     referer = pp["http_referer"]
     referer = referer.split('?')[0]
@@ -121,7 +116,8 @@ def process_message(pp):
 import psutil
 
 q_msg = Queue()
-ISB=1
+#q_msg = multiprocessing.Queue()
+
 
 def kill(proc_pid):
     process = psutil.Process(proc_pid)
@@ -136,64 +132,116 @@ def reload(s):
     time.sleep(5)
 
 def process_queue(i, q):
-    now = datetime.now()
-    logging.info("[%s] t:%d" % (now, i))
-    command = split("%s %d" % (commandline, i))
-    s = subprocess.Popen(command, bufsize=ISB, stdin=subprocess.PIPE)
-
-    #wait for the above pipe opened
-    #time.sleep(1)
-
-    logging.info("[%s] fork pid:%s" % (now, s.pid))
-    while True:
+     ISB=1
+     logging.info("t:%d" % i)
+#     command0 = split("%s %d %d" % (commandline, i, 0))
+#     command1 = split("%s %d %d" % (commandline, i, 1))
+#     s0 = subprocess.Popen(command0, bufsize=ISB, stdin=subprocess.PIPE)
+#     s1 = subprocess.Popen(command1, bufsize=ISB, stdin=subprocess.PIPE)
+#     logging.info("fork pid0:%s pid1:%s" % (s0.pid, s1.pid))
+     while True:
         try:
             if q.empty():
                 continue
-            msg = q.get()
+#            msg = None
+            msg = q.get_nowait()
             if msg is None:
+                logging.info("case1:%s" % msg)
+                #q.task_done()
                 continue
-            #msgp = None
+            #else:
+            #    logging.info("case1:%s" % msg)
+#            msgp = None
             msgp = parser.parse_line(msg)
             if msgp is None:
+                logging.info("case2:%s" % msg)
+                #q.task_done()
                 continue
-            #mm = None
+            #else:
+            #    logging.info("case2:%s" % msg)
+#            mm = None
+            http_host = msgp["http_host"]
+            GG = 1
+#           if re.match(cdn_gg0, http_host):
+#                GG = 0
+#           elif re.match(cdn_gg1, http_host):
+#                GG = 1
+                                        
             mm = process_message(msgp)
+#            cdn_filter_match = re.match(cdn_filter,mm["host"])
+#            if cdn_filter_match:
+#                logging.info("%s" % mm)
+#                continue
+
             if mm is not None:
-                #logging.info(str(mm))
-                #everything is all good until here
-                s.stdin.write("%s\n" % str(mm))
-        #except IOError as e:
-        #    if e.errno == errno.EPIPE:
-        #        reload(s)
-        #        s = subprocess.Popen(command, bufsize=ISB, stdin=subprocess.PIPE)
-        #    pass
-        except IOError as err:
-            logging.info("[%s] e1:%s" % (datetime.now(), err))
-            reload(s)
-            s = subprocess.Popen(command, bufsize=ISB, stdin=subprocess.PIPE)
+                print mm
+                #if GG == 0:
+                    #s0.stdin.write("%s\n" % str(mm))
+                #elif GG == 1:
+                #    s1.stdin.write("%s\n" % str(mm))
+
+            #else:
+            #    logging.info("case3:%s" % msg)
+            #q.task_done()
+#        except IOError as e:
+#            logging.info("ioerr:%s" % e)
+#            if e.errno == errno.EPIPE:
+#                reload(s0)
+ #               s0 = subprocess.Popen(command0, bufsize=ISB, stdin=subprocess.PIPE)
+#                reload(s1)
+#                s1 = subprocess.Popen(command1, bufsize=ISB, stdin=subprocess.PIPE)
+#            pass
+#        except Queue.Empty:
+#            logging.info("err1:empty:%s" % e)
+#            pass 
         except Exception, e:
-            #TODO: why list index goes out of range???
-            logging.info("[%s] e1 Exception:%s" % (datetime.now(), e))
+            logging.info("err1:%s" % e)
+            pass
 
-# start n threads to process the queue
-for i in range(NPIPE):
-    Thread(target=process_queue, name='q_msg_%d' % i, args=(i, q_msg)).start()
+#POOL_PIPE = []
+#for i in range(PP_INIT):
+#    pp = subprocess.Popen(command0, bufsize=ISB, stdin=subprocess.PIPE)
+POOL_INIT=32
+POOL_MAX=32
+POOL = []
+def create_thread(pool, func, q_msg):
+    i = len(pool) + 1
+    t = Thread(target=process_queue, name='q_msg_%d' % i,args=(i, q_msg))
+#    t = multiprocessing.Process(target=func , name='q_msg_%d' % i,args=(i, q_msg)) 
+    pool.append(t)
+    t.daemon = True
+    t.start()
 
-#read and queue messages, run forever, asynchronous with queue reading process
-#prefixes = 'INFO:root:'
-prefixes = 'Jul  5 '
+for i in range(POOL_INIT):
+    create_thread(POOL, process_queue, q_msg)
+
+
+def check_counter(POOL, q_msg ):
+    while True:
+        time.sleep(10)
+        qs = q_msg.qsize()
+        ll = len(POOL)
+        if ll <= POOL_MAX and qs > 10000:
+            create_thread(POOL, process_queue, q_msg)
+
+        logging.info("qsize:%d nworker:%d" % (qs, len(POOL)))
+
+#t = Thread(target=check_counter, name='' ,args=(POOL, q_msg ))
+#t.daemon = True
+#t.start()
+
 while True:
     try:
         message = sys.stdin.readline()
-        #logging.info(message)
-        if not message or message == '\n':
+        if not message:
             continue
-        #process the log prefix (I just got the wrong log file???)
-        #if message.startswith(prefixes):
-        #    message=message[len(prefixes):]
-        #processing end
-        q_msg.put(message)
+        message = message.replace('""', '"-"')
+        q_msg.put_nowait(message)
+
     except Exception, err:
-        logging.info(err)
+        logging.info("err2:%s" % e)
         pass
-        # myprocess.wait()
+                               
+
+                                        
+                                        

@@ -1,0 +1,160 @@
+The directory "/Users/ThangNguyen/www/piwikDev/tmp/cache/tracker/" is not writable.
+
+[32mINFO [2016-06-21 07:46:55][39m ---------------------------
+[32mINFO [2016-06-21 07:46:55][39m INIT
+[32mINFO [2016-06-21 07:46:55][39m Running Piwik 2.16.2-b2 as Super User
+[32mINFO [2016-06-21 07:46:55][39m ---------------------------
+[32mINFO [2016-06-21 07:46:55][39m NOTES
+[32mINFO [2016-06-21 07:46:55][39m - Reports for today will be processed at most every 150 seconds. You can change this value in Piwik UI > Settings > General Settings.
+[32mINFO [2016-06-21 07:46:55][39m - Reports for the current week/month/year will be refreshed at most every 3600 seconds.
+[32mINFO [2016-06-21 07:46:55][39m - Archiving was last executed without error 2 hours 44 min ago
+[32mINFO [2016-06-21 07:46:55][39m Will invalidate archived reports for 2016-06-15 for following websites ids: 2,3,4,5,6,7,8,9
+[32mINFO [2016-06-21 07:46:55][39m - Will process 8 other websites because some old data reports have been invalidated (eg. using the Log Import script) , IDs: 2, 3, 4, 5, 6, 7, 8, 9
+[32mINFO [2016-06-21 07:46:55][39m - Will process all 9 websites
+[32mINFO [2016-06-21 07:46:56][39m ---------------------------
+[32mINFO [2016-06-21 07:46:56][39m START
+[32mINFO [2016-06-21 07:46:56][39m Starting Piwik reports archiving...
+[32mINFO [2016-06-21 07:46:57][39m Will pre-process for website id = 1, period = day, date = last1000
+[32mINFO [2016-06-21 07:46:57][39m - pre-processing all visits
+[32mINFO [2016-06-21 07:47:10][39m Archived website id = 1, period = day, 0 segments, 0 visits in last 1000 days, 0 visits today, Time elapsed: 13.547s
+[32mINFO [2016-06-21 07:47:10][39m Will pre-process for website id = 1, period = week, date = last1000
+[32mINFO [2016-06-21 07:47:10][39m - pre-processing all visits
+[32mINFO [2016-06-21 07:48:04][39m ---------------------------
+[32mINFO [2016-06-21 07:48:04][39m INIT
+[32mINFO [2016-06-21 07:48:04][39m Running Piwik 2.16.2-b2 as Super User
+[32mINFO [2016-06-21 07:48:04][39m ---------------------------
+[32mINFO [2016-06-21 07:48:04][39m NOTES
+[32mINFO [2016-06-21 07:48:04][39m - Reports for today will be processed at most every 150 seconds. You can change this value in Piwik UI > Settings > General Settings.
+[32mINFO [2016-06-21 07:48:04][39m - Reports for the current week/month/year will be refreshed at most every 3600 seconds.
+[32mINFO [2016-06-21 07:48:04][39m - Archiving was last executed without error 2 hours 45 min ago
+[32mINFO [2016-06-21 07:48:04][39m Will invalidate archived reports for 2016-06-15 for following websites ids: 2,3,4,5,6
+[32mINFO [2016-06-21 07:48:04][39m - Will process 8 other websites because some old data reports have been invalidated (eg. using the Log Import script) , IDs: 2, 3, 4, 5, 6, 7, 8, 9
+[32mINFO [2016-06-21 07:48:04][39m - Will process all 9 websites
+[32mINFO [2016-06-21 07:48:05][39m Will ignore websites and help finish a previous started queue instead. IDs: 2, 3, 4, 5, 6, 7, 8, 9
+[32mINFO [2016-06-21 07:48:05][39m ---------------------------
+[32mINFO [2016-06-21 07:48:05][39m START
+[32mINFO [2016-06-21 07:48:05][39m Starting Piwik reports archiving...
+[32mINFO [2016-06-21 07:48:05][39m Will pre-process for website id = 2, period = day, date = last1000
+[32mINFO [2016-06-21 07:48:05][39m - pre-processing all visits
+[32mINFO [2016-06-21 07:48:47][39m Archived website id = 2, period = day, 0 segments, 0 visits in last 1000 days, 0 visits today, Time elapsed: 41.607s
+[32mINFO [2016-06-21 07:48:47][39m Will pre-process for website id = 2, period = week, date = last1000
+[32mINFO [2016-06-21 07:48:47][39m - pre-processing all visits
+[32mINFO [2016-06-21 07:49:33][39m Archived website id = 2, period = week, 0 segments, 6288 visits in last 1000 weeks, 0 visits this week, Time elapsed: 46.435s
+[32mINFO [2016-06-21 07:49:33][39m Will pre-process for website id = 2, period = month, date = last1000
+[32mINFO [2016-06-21 07:49:33][39m - pre-processing all visits
+[32mINFO [2016-06-21 07:50:14][39m Archived website id = 2, period = month, 0 segments, 6316 visits in last 1000 months, 6316 visits this month, Time elapsed: 40.915s
+[32mINFO [2016-06-21 07:50:14][39m Will pre-process for website id = 2, period = year, date = last1000
+[32mINFO [2016-06-21 07:50:14][39m - pre-processing all visits
+[32mINFO [2016-06-21 07:50:55][39m Archived website id = 2, period = year, 0 segments, 6320 visits in last 1000 years, 6320 visits this year, Time elapsed: 41.334s
+[32mINFO [2016-06-21 07:50:55][39m Archived website id = 2, 4 API requests, Time elapsed: 170.305s [1/8 done]
+[32mINFO [2016-06-21 07:50:56][39m Will pre-process for website id = 3, period = day, date = last1000
+[32mINFO [2016-06-21 07:50:56][39m - pre-processing all visits
+[32mINFO [2016-06-21 07:51:12][39m Archived website id = 3, period = day, 0 segments, 0 visits in last 1000 days, 0 visits today, Time elapsed: 16.062s
+[32mINFO [2016-06-21 07:51:12][39m Will pre-process for website id = 3, period = week, date = last1000
+[32mINFO [2016-06-21 07:51:12][39m - pre-processing all visits
+[32mINFO [2016-06-21 07:51:21][39m Archived website id = 3, period = week, 0 segments, 2352 visits in last 1000 weeks, 0 visits this week, Time elapsed: 9.210s
+[32mINFO [2016-06-21 07:51:21][39m Will pre-process for website id = 3, period = month, date = last1000
+[32mINFO [2016-06-21 07:51:21][39m - pre-processing all visits
+[32mINFO [2016-06-21 07:51:26][39m Archived website id = 3, period = month, 0 segments, 2352 visits in last 1000 months, 2352 visits this month, Time elapsed: 4.474s
+[32mINFO [2016-06-21 07:51:26][39m Will pre-process for website id = 3, period = year, date = last1000
+[32mINFO [2016-06-21 07:51:26][39m - pre-processing all visits
+[32mINFO [2016-06-21 07:51:28][39m Archived website id = 3, period = year, 0 segments, 2352 visits in last 1000 years, 2352 visits this year, Time elapsed: 2.238s
+[32mINFO [2016-06-21 07:51:28][39m Archived website id = 3, 4 API requests, Time elapsed: 31.989s [2/8 done]
+[32mINFO [2016-06-21 07:51:28][39m Will pre-process for website id = 4, period = day, date = last1000
+[32mINFO [2016-06-21 07:51:28][39m - pre-processing all visits
+[32mINFO [2016-06-21 07:51:39][39m Archived website id = 4, period = day, 0 segments, 0 visits in last 1000 days, 0 visits today, Time elapsed: 10.883s
+[32mINFO [2016-06-21 07:51:39][39m Will pre-process for website id = 4, period = week, date = last1000
+[32mINFO [2016-06-21 07:51:39][39m - pre-processing all visits
+[32mINFO [2016-06-21 07:51:48][39m Archived website id = 4, period = week, 0 segments, 96 visits in last 1000 weeks, 0 visits this week, Time elapsed: 8.516s
+[32mINFO [2016-06-21 07:51:48][39m Will pre-process for website id = 4, period = month, date = last1000
+[32mINFO [2016-06-21 07:51:48][39m - pre-processing all visits
+[32mINFO [2016-06-21 07:51:53][39m Archived website id = 4, period = month, 0 segments, 96 visits in last 1000 months, 96 visits this month, Time elapsed: 4.834s
+[32mINFO [2016-06-21 07:51:53][39m Will pre-process for website id = 4, period = year, date = last1000
+[32mINFO [2016-06-21 07:51:53][39m - pre-processing all visits
+[32mINFO [2016-06-21 07:51:55][39m Archived website id = 4, period = year, 0 segments, 96 visits in last 1000 years, 96 visits this year, Time elapsed: 2.077s
+[32mINFO [2016-06-21 07:51:55][39m Archived website id = 4, 4 API requests, Time elapsed: 26.318s [3/8 done]
+[32mINFO [2016-06-21 07:51:55][39m Will pre-process for website id = 5, period = day, date = last1000
+[32mINFO [2016-06-21 07:51:55][39m - pre-processing all visits
+[32mINFO [2016-06-21 07:52:08][39m Archived website id = 5, period = day, 0 segments, 0 visits in last 1000 days, 0 visits today, Time elapsed: 12.640s
+[32mINFO [2016-06-21 07:52:08][39m Will pre-process for website id = 5, period = week, date = last1000
+[32mINFO [2016-06-21 07:52:08][39m - pre-processing all visits
+[32mINFO [2016-06-21 07:52:16][39m Archived website id = 5, period = week, 0 segments, 509 visits in last 1000 weeks, 0 visits this week, Time elapsed: 7.997s
+[32mINFO [2016-06-21 07:52:16][39m Will pre-process for website id = 5, period = month, date = last1000
+[32mINFO [2016-06-21 07:52:16][39m - pre-processing all visits
+[32mINFO [2016-06-21 07:52:21][39m Archived website id = 5, period = month, 0 segments, 509 visits in last 1000 months, 509 visits this month, Time elapsed: 4.825s
+[32mINFO [2016-06-21 07:52:21][39m Will pre-process for website id = 5, period = year, date = last1000
+[32mINFO [2016-06-21 07:52:21][39m - pre-processing all visits
+[32mINFO [2016-06-21 07:52:24][39m Archived website id = 5, period = year, 0 segments, 509 visits in last 1000 years, 509 visits this year, Time elapsed: 2.938s
+[32mINFO [2016-06-21 07:52:24][39m Archived website id = 5, 4 API requests, Time elapsed: 28.407s [4/8 done]
+[32mINFO [2016-06-21 07:52:24][39m Will pre-process for website id = 6, period = day, date = last1000
+[32mINFO [2016-06-21 07:52:24][39m - pre-processing all visits
+[32mINFO [2016-06-21 07:52:37][39m Archived website id = 6, period = day, 0 segments, 0 visits in last 1000 days, 0 visits today, Time elapsed: 12.434s
+[32mINFO [2016-06-21 07:52:37][39m Will pre-process for website id = 6, period = week, date = last1000
+[32mINFO [2016-06-21 07:52:37][39m - pre-processing all visits
+[32mINFO [2016-06-21 07:52:45][39m Archived website id = 6, period = week, 0 segments, 11 visits in last 1000 weeks, 0 visits this week, Time elapsed: 7.923s
+[32mINFO [2016-06-21 07:52:45][39m Will pre-process for website id = 6, period = month, date = last1000
+[32mINFO [2016-06-21 07:52:45][39m - pre-processing all visits
+[32mINFO [2016-06-21 07:52:49][39m Archived website id = 6, period = month, 0 segments, 11 visits in last 1000 months, 11 visits this month, Time elapsed: 4.386s
+[32mINFO [2016-06-21 07:52:49][39m Will pre-process for website id = 6, period = year, date = last1000
+[32mINFO [2016-06-21 07:52:49][39m - pre-processing all visits
+[32mINFO [2016-06-21 07:52:51][39m Archived website id = 6, period = year, 0 segments, 11 visits in last 1000 years, 11 visits this year, Time elapsed: 2.114s
+[32mINFO [2016-06-21 07:52:51][39m Archived website id = 6, 4 API requests, Time elapsed: 26.862s [5/8 done]
+[32mINFO [2016-06-21 07:52:52][39m Will pre-process for website id = 7, period = day, date = last1000
+[32mINFO [2016-06-21 07:52:52][39m - pre-processing all visits
+[32mINFO [2016-06-21 07:53:02][39m Archived website id = 7, period = day, 0 segments, 0 visits in last 1000 days, 0 visits today, Time elapsed: 10.501s
+[32mINFO [2016-06-21 07:53:02][39m Will pre-process for website id = 7, period = week, date = last1000
+[32mINFO [2016-06-21 07:53:02][39m - pre-processing all visits
+[32mINFO [2016-06-21 07:53:10][39m Archived website id = 7, period = week, 0 segments, 0 visits in last 1000 weeks, 0 visits this week, Time elapsed: 7.906s
+[32mINFO [2016-06-21 07:53:10][39m Will pre-process for website id = 7, period = month, date = last1000
+[32mINFO [2016-06-21 07:53:10][39m - pre-processing all visits
+[32mINFO [2016-06-21 07:53:14][39m Archived website id = 7, period = month, 0 segments, 0 visits in last 1000 months, 0 visits this month, Time elapsed: 3.561s
+[32mINFO [2016-06-21 07:53:14][39m Will pre-process for website id = 7, period = year, date = last1000
+[32mINFO [2016-06-21 07:53:14][39m - pre-processing all visits
+[32mINFO [2016-06-21 07:53:15][39m Archived website id = 7, period = year, 0 segments, 0 visits in last 1000 years, 0 visits this year, Time elapsed: 1.550s
+[32mINFO [2016-06-21 07:53:15][39m Archived website id = 7, 4 API requests, Time elapsed: 23.526s [6/8 done]
+[32mINFO [2016-06-21 07:53:16][39m Will pre-process for website id = 8, period = day, date = last1000
+[32mINFO [2016-06-21 07:53:16][39m - pre-processing all visits
+[32mINFO [2016-06-21 07:53:27][39m Archived website id = 8, period = day, 0 segments, 0 visits in last 1000 days, 0 visits today, Time elapsed: 11.385s
+[32mINFO [2016-06-21 07:53:27][39m Will pre-process for website id = 8, period = week, date = last1000
+[32mINFO [2016-06-21 07:53:27][39m - pre-processing all visits
+[32mINFO [2016-06-21 07:53:35][39m Archived website id = 8, period = week, 0 segments, 1 visits in last 1000 weeks, 0 visits this week, Time elapsed: 7.972s
+[32mINFO [2016-06-21 07:53:35][39m Will pre-process for website id = 8, period = month, date = last1000
+[32mINFO [2016-06-21 07:53:35][39m - pre-processing all visits
+[32mINFO [2016-06-21 07:53:39][39m Archived website id = 8, period = month, 0 segments, 1 visits in last 1000 months, 1 visits this month, Time elapsed: 3.521s
+[32mINFO [2016-06-21 07:53:39][39m Will pre-process for website id = 8, period = year, date = last1000
+[32mINFO [2016-06-21 07:53:39][39m - pre-processing all visits
+[32mINFO [2016-06-21 07:53:41][39m Archived website id = 8, period = year, 0 segments, 1 visits in last 1000 years, 1 visits this year, Time elapsed: 1.926s
+[32mINFO [2016-06-21 07:53:41][39m Archived website id = 8, 4 API requests, Time elapsed: 24.809s [7/8 done]
+[32mINFO [2016-06-21 07:53:41][39m Will pre-process for website id = 9, period = day, date = last1000
+[32mINFO [2016-06-21 07:53:41][39m - pre-processing all visits
+[32mINFO [2016-06-21 07:53:52][39m Archived website id = 9, period = day, 0 segments, 0 visits in last 1000 days, 0 visits today, Time elapsed: 10.495s
+[32mINFO [2016-06-21 07:53:52][39m Will pre-process for website id = 9, period = week, date = last1000
+[32mINFO [2016-06-21 07:53:52][39m - pre-processing all visits
+[32mINFO [2016-06-21 07:53:59][39m Archived website id = 9, period = week, 0 segments, 1 visits in last 1000 weeks, 0 visits this week, Time elapsed: 7.563s
+[32mINFO [2016-06-21 07:53:59][39m Will pre-process for website id = 9, period = month, date = last1000
+[32mINFO [2016-06-21 07:53:59][39m - pre-processing all visits
+[32mINFO [2016-06-21 07:54:03][39m Archived website id = 9, period = month, 0 segments, 1 visits in last 1000 months, 1 visits this month, Time elapsed: 4.067s
+[32mINFO [2016-06-21 07:54:03][39m Will pre-process for website id = 9, period = year, date = last1000
+[32mINFO [2016-06-21 07:54:03][39m - pre-processing all visits
+[32mINFO [2016-06-21 07:54:05][39m Archived website id = 9, period = year, 0 segments, 1 visits in last 1000 years, 1 visits this year, Time elapsed: 1.911s
+[32mINFO [2016-06-21 07:54:05][39m Archived website id = 9, 4 API requests, Time elapsed: 24.043s [8/8 done]
+[32mINFO [2016-06-21 07:54:06][39m Done archiving!
+[32mINFO [2016-06-21 07:54:06][39m ---------------------------
+[32mINFO [2016-06-21 07:54:06][39m SUMMARY
+[32mINFO [2016-06-21 07:54:06][39m Total visits for today across archived websites: 0
+[32mINFO [2016-06-21 07:54:06][39m Archived today's reports for 8 websites
+[32mINFO [2016-06-21 07:54:06][39m Archived week/month/year for 8 websites
+[32mINFO [2016-06-21 07:54:06][39m Skipped 1 websites
+[32mINFO [2016-06-21 07:54:06][39m - 0 skipped because no new visit since the last script execution
+[32mINFO [2016-06-21 07:54:06][39m - 0 skipped because existing daily reports are less than 150 seconds old
+[32mINFO [2016-06-21 07:54:06][39m - 0 skipped because existing week/month/year periods reports are less than 3600 seconds old
+[32mINFO [2016-06-21 07:54:06][39m Total API requests: 32
+[32mINFO [2016-06-21 07:54:06][39m done: 8/8 100%, 0 vtoday, 8 wtoday, 8 wperiods, 32 req, 361019 ms, no error
+[32mINFO [2016-06-21 07:54:06][39m Time elapsed: 361.020s
+[32mINFO [2016-06-21 07:54:06][39m ---------------------------
+[32mINFO [2016-06-21 07:54:06][39m SCHEDULED TASKS
+[32mINFO [2016-06-21 07:54:06][39m Starting Scheduled tasks... 
+[32mINFO [2016-06-21 07:54:06][39m Scheduler: executing task Piwik\Plugins\ExamplePlugin\Tasks.myTask...
+[32mINFO [2016-06-21 07:54:06][39m Scheduler: finished. Time elapsed: 0.000s
+[32mINFO [2016-06-21 07:54:06][39m done
+[32mINFO [2016-06-21 07:54:06][39m ---------------------------
