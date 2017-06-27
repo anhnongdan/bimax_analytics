@@ -142,7 +142,7 @@ def process_queue(i, q):
     s = subprocess.Popen(command, bufsize=ISB, stdin=subprocess.PIPE)
 
     #wait for the above pipe opened
-    #time.sleep(1)
+    time.sleep(1)
 
     logging.info("[%s] fork pid:%s" % (now, s.pid))
     while True:
@@ -181,7 +181,7 @@ for i in range(NPIPE):
 
 #read and queue messages, run forever, asynchronous with queue reading process
 #prefixes = 'INFO:root:'
-prefixes = 'Jul  5 '
+prefixes = 'May 31 '
 while True:
     try:
         message = sys.stdin.readline()
@@ -189,8 +189,8 @@ while True:
         if not message or message == '\n':
             continue
         #process the log prefix (I just got the wrong log file???)
-        #if message.startswith(prefixes):
-        #    message=message[len(prefixes):]
+        # if message.startswith(prefixes):
+        #    message=message[len(prefixes):
         #processing end
         q_msg.put(message)
     except Exception, err:

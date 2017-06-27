@@ -10,7 +10,7 @@
 #
 # For more info see: http://piwik.org/log-analytics/ and http://piwik.org/docs/log-analytics-tool-how-to/
 #
-# Requires Python 2.6 or greater.
+# Requires Python 2.6 or 2.7
 #
 
 import base64
@@ -58,18 +58,19 @@ except ImportError:
 ##
 
 STATIC_EXTENSIONS = set((
-    'gif jpg jpeg png bmp ico svg svgz ttf otf eot woff class swf css js xml robots.txt webp'
+    'gif jpg jpeg png bmp ico svg svgz ttf otf eot woff woff2 class swf css js xml robots.txt webp'
 ).split())
 
 DOWNLOAD_EXTENSIONS = set((
-    '7z aac arc arj asf asx avi bin csv deb dmg doc docx exe flv gz gzip hqx '
-    'ibooks jar mpg mp2 mp3 mp4 mpeg mov movie msi msp odb odf odg odp '
-    'ods odt ogg ogv pdf phps ppt pptx qt qtm ra ram rar rpm sea sit tar tbz '
-    'bz2 tbz tgz torrent txt wav wma wmv wpd xls xlsx xml xsd z zip '
+    '7z aac arc arj asf asx avi bin csv deb dmg doc docx exe flac flv gz gzip hqx '
+    'ibooks jar json mpg mp2 mp3 mp4 mpeg mov movie msi msp odb odf odg odp '
+    'ods odt ogg ogv pdf phps ppt pptx qt qtm ra ram rar rpm rtf sea sit tar tbz '
+    'bz2 tbz tgz torrent txt wav webm wma wmv wpd xls xlsx xml xsd z zip '
     'azw3 epub mobi apk'
 ).split())
 
 # A good source is: http://phpbb-bots.blogspot.com/
+# user agents must be lowercase
 EXCLUDED_USER_AGENTS = (
     'adsbot-google',
     'ask jeeves',
@@ -90,6 +91,7 @@ EXCLUDED_USER_AGENTS = (
     'msnbot',
     'netcraftsurvey',
     'panopta',
+    'pingdom.com_bot_',
     'robot',
     'spider',
     'surveybot',
@@ -457,6 +459,7 @@ class Configuration(object):
             usage='Usage: %prog [options] log_file [ log_file [...] ]',
             description="Import HTTP access logs to Piwik. "
                          "log_file is the path to a server access log file (uncompressed, .gz, .bz2, or specify - to read from stdin). "
+		         " You may also import many log files at once (for example set log_file to *.log or *.log.gz)."
                          " By default, the script will try to produce clean reports and will exclude bots, static files, discard http error and redirects, etc. This is customizable, see below.",
             epilog="About Piwik Server Log Analytics: http://piwik.org/log-analytics/ "
                    "              Found a bug? Please create a ticket in http://dev.piwik.org/ "
@@ -492,6 +495,11 @@ class Configuration(object):
         option_parser.add_option(
             '--url', dest='piwik_url',
             help="REQUIRED Your Piwik server URL, eg. http://example.com/piwik/ or http://analytics.example.net",
+        )
+        option_parser.add_option(
+            '--api-url', dest='piwik_api_url',
+            help="This URL will be used to send API requests (use it if your tracker URL differs from UI/API url), "
+            "eg. http://other-example.com/piwik/ or http://analytics-api.example.net",
         )
         option_parser.add_option(
             '--dry-run', dest='dry_run',
@@ -557,15 +565,20 @@ class Configuration(object):
         option_parser.add_option(
             '--hostname', dest='hostnames', action='append', default=[],
             help="Accepted hostname (requests with other hostnames will be excluded). "
-            "Can be specified multiple times"
+            " You may use the star character * "
+            " Example: --hostname=*domain.com"
+            " Can be specified multiple times"
         )
         option_parser.add_option(
             '--exclude-path', dest='excluded_paths', action='append', default=[],
-            help="Any URL path matching this exclude-path will not be imported in Piwik. Can be specified multiple times"
+            help="Any URL path matching this exclude-path will not be imported in Piwik. "
+            " You must use the star character *. "
+            " Example: --exclude-path=*/admin/*"
+            " Can be specified multiple times. "
         )
         option_parser.add_option(
             '--exclude-path-from', dest='exclude_path_from',
-            help="Each line from this file is a path to exclude (see: --exclude-path)"
+            help="Each line from this file is a path to exclude. Each path must contain the character * to match a string. (see: --exclude-path)"
         )
         option_parser.add_option(
             '--include-path', dest='included_paths', action='append', default=[],
@@ -878,7 +891,14 @@ class Configuration(object):
 
         if not (self.options.piwik_url.startswith('http://') or self.options.piwik_url.startswith('https://')):
             self.options.piwik_url = 'http://' + self.options.piwik_url
-        logging.debug('Piwik URL is: %s', self.options.piwik_url)
+        logging.debug('Piwik Tracker API URL is: %s', self.options.piwik_url)
+
+        if not self.options.piwik_api_url:
+            self.options.piwik_api_url = self.options.piwik_url
+
+        if not (self.options.piwik_api_url.startswith('http://') or self.options.piwik_api_url.startswith('https://')):
+            self.options.piwik_api_url = 'http://' + self.options.piwik_api_url
+        logging.debug('Piwik Analytics API URL is: %s', self.options.piwik_api_url)
 
         if not self.options.piwik_token_auth:
             try:
@@ -921,7 +941,7 @@ class Configuration(object):
                     userLogin=piwik_login,
                     md5Password=piwik_password,
                     _token_auth='',
-                    _url=self.options.piwik_url,
+                    _url=self.options.piwik_api_url,
                 )
             except urllib2.URLError, e:
                 fatal_error('error when fetching token_auth from the API: %s' % e)
@@ -946,7 +966,7 @@ class Configuration(object):
             success = len(config_file.read(self.options.config_file)) > 0
             if not success:
                 fatal_error(
-                    "the configuration file" + self.options.config_file + " could not be read. Please check permission. This file must be readable to get the authentication token"
+                    "the configuration file" + self.options.config_file + " could not be read. Please check permission. This file must be readable by the user running this script to get the authentication token"
                 )
 
             updatetokenfile = os.path.abspath(
@@ -976,6 +996,9 @@ class Configuration(object):
             command.append('--piwik-domain=' + hostname )
 
             command = subprocess.list2cmdline(command)
+
+#            logging.debug(command);
+
             process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
             [stdout, stderr] = process.communicate()
             if process.returncode != 0:
@@ -1191,7 +1214,7 @@ Processing your log data
             self.count_lines_recorded.value,
             self.time_start, self.time_stop,
         )),
-    'url': config.options.piwik_url,
+    'url': config.options.piwik_api_url,
     'invalid_lines': invalid_lines_summary
 }
 
@@ -1311,6 +1334,9 @@ class Piwik(object):
             args['token_auth'] = token_auth
 
         url = kwargs.pop('_url', None)
+        if url is None:
+            url = config.options.piwik_api_url
+
 
         if kwargs:
             args.update(kwargs)
@@ -1326,7 +1352,14 @@ class Piwik(object):
                     final_args.append(('%s[%d]' % (key, index), obj))
             else:
                 final_args.append((key, value))
+
+
+#        logging.debug('%s' % final_args)
+#        logging.debug('%s' % url)
+
         res = Piwik._call('/', final_args, url=url)
+
+
         try:
             return json.loads(res)
         except ValueError:
@@ -1522,6 +1555,9 @@ class DynamicResolver(object):
             # We only consider requests with piwik.php which don't need host to be imported
             return self._resolve_when_replay_tracking(hit)
         else:
+            # Workaround for empty Host bug issue #126
+            if hit.host.strip() == '':
+                hit.host = 'no-hostname-found-in-log'
             return self._resolve_by_host(hit)
 
     def check_format(self, format):
