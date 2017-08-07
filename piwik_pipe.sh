@@ -1,6 +1,6 @@
 #!/bin/sh
 import=/home/tony/Git/bimax_analytics
-pw="/home/tony/www/cBIMAX/src"
+pw="/home/tony/www/piwik_stable_3.0.1"
 ilogs=$import/import_logs.py
 tk=e750e87a0c9ee759f7dc97366a6ff61a
 opt=""
